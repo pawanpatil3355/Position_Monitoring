@@ -5,27 +5,27 @@ const cors = require('cors');
 
 const app = express();
 
-// ✅ Allowed origins (local + production)
+// ✅ Allowed origins (local + deployed frontend)
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.FRONTEND_URL // Vercel URL
+  process.env.FRONTEND_URL
 ];
 
-// ✅ CORS setup
+// ✅ CORS configuration
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow Postman / mobile apps
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("CORS not allowed"));
+      callback(new Error("❌ CORS not allowed"));
     }
   },
   credentials: true
 }));
 
+// ✅ Middleware
 app.use(express.json());
 
 // ✅ Routes
@@ -34,26 +34,25 @@ app.use('/api', require('./routes/esp32'));
 app.use('/api', require('./routes/student'));
 app.use('/api', require('./routes/teacher'));
 
-// ✅ Health check (important for Render)
+// ✅ Health check (Render uses this)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date() });
 });
 
-// ✅ MongoDB Connection + Server Start
+// ✅ Port setup
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('✅ Connected to MongoDB');
+// ✅ MongoDB connection (FIXED - no deprecated options)
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('✅ Connected to MongoDB');
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    // ✅ IMPORTANT for Render
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    process.exit(1);
   });
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err.message);
-  process.exit(1);
-});
