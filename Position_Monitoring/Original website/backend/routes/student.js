@@ -61,4 +61,13 @@ router.put('/profile/me', auth(['user']), async (req, res) => {
   }
 });
 
+router.get('/test/students', async (req, res) => {
+  try {
+    const students = await Student.find(); // fetch all
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;
