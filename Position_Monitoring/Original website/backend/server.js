@@ -5,32 +5,12 @@ const cors = require('cors');
 
 const app = express();
 
-// Define allowed frontends
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.FRONTEND_URL // Make sure this is set in your Render environment variables!
-];
-
-// Single, clean CORS configuration
+// 🟢 Completely open CORS configuration
 app.use(cors({
-  origin: function (origin, callback) {
-    // 1. Allow requests with no origin (like your ESP32 or Postman)
-    if (!origin) return callback(null, true);
-
-    // 2. Allow allowed frontend domains
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } 
-    
-    // 3. Actually block unauthorized origins (Good security practice)
-    else {
-      console.log("❌ Blocked by CORS:", origin);
-      return callback(new Error('Not allowed by CORS')); 
-    }
-  },
-  credentials: true,
+  origin: true, // This automatically allows any origin that requests access
+  credentials: true, // Kept this so your /api/auth routes (cookies/sessions) still work
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  // 🟢 CRITICAL FIX: Added 'x-esp32-key' so your ESP32 requests are accepted
+  // Ensure the ESP32 custom header is still allowed
   allowedHeaders: ["Content-Type", "Authorization", "x-esp32-key"] 
 }));
 
